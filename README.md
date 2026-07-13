@@ -53,6 +53,8 @@ Luego abre `http://localhost:3001`.
 
 La app conserva datos demo para presentacion, pero ya tiene un cliente Supabase listo en `lib/supabase/client.ts` para migrar vistas y formularios a datos reales por etapas.
 
+Para compartir una misma base de datos con otros proyectos sin mezclar informacion, todas las tablas, tipos, indices y funciones propias de esta app usan el prefijo `bienestar_arq_`. Si ya se habia aplicado el primer esquema con nombres genericos, la migracion `supabase/migrations/20260713_isolate_bienestar_arq_tables.sql` renombra esos objetos al prefijo correcto.
+
 ## Nota de alcance
 
 Este es un prototipo funcional para presentacion. Antes de produccion se debe conectar Supabase Auth, revisar marco legal, formalizar consentimiento informado, definir retencion de datos, activar auditoria operativa y validar el protocolo de crisis con la universidad.
