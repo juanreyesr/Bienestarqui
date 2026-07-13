@@ -46,6 +46,7 @@ import {
   type SupportRequest,
   type TrainingProgress
 } from "@/lib/demo-data";
+import { WellbeingScene } from "./WellbeingScene";
 
 type ViewKey =
   | "resumen"
@@ -101,10 +102,10 @@ export default function Home() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand-row">
-          <div className="brand-mark" aria-hidden="true">ARQ</div>
+          <div className="brand-mark" aria-hidden="true">UMG</div>
           <div className="brand-copy">
-            <strong>Bienestar ARQ</strong>
-            <span>Gestion, derivacion y prevencion</span>
+            <strong>Bienestar UMG</strong>
+            <span>Arquitectura · Gestion, derivacion y prevencion</span>
           </div>
         </div>
         <div className="user-pill">
@@ -202,7 +203,7 @@ export default function Home() {
 }
 
 function LoginPage({ onLogin }: { onLogin: (user: DemoUser) => void }) {
-  const [email, setEmail] = useState("decano@arq.edu.gt");
+  const [email, setEmail] = useState("decano@umg.edu.gt");
   const [error, setError] = useState("");
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -219,18 +220,20 @@ function LoginPage({ onLogin }: { onLogin: (user: DemoUser) => void }) {
   return (
     <main className="login-page">
       <section className="welcome-panel">
+        <WellbeingScene />
         <div>
           <div className="brand-row">
-            <div className="brand-mark" aria-hidden="true">ARQ</div>
+            <div className="brand-mark" aria-hidden="true">UMG</div>
             <div className="brand-copy">
-              <strong>Bienestar ARQ</strong>
+              <strong>Bienestar UMG</strong>
               <span>Facultad de Arquitectura</span>
             </div>
           </div>
+          <span className="hero-kicker">Experiencia institucional de bienestar</span>
           <h1>Un sistema humano para cuidar, derivar y prevenir.</h1>
           <p>
-            Prototipo funcional para mostrar como la facultad puede ordenar solicitudes de apoyo,
-            proteger informacion sensible y convertir los datos en acciones preventivas.
+            Un centro de mando discreto para ordenar solicitudes de apoyo, proteger informacion sensible
+            y convertir cada senal en acciones preventivas para estudiantes, docentes y sedes.
           </p>
         </div>
         <div className="privacy-strip" aria-label="Principios de seguridad">
@@ -242,7 +245,7 @@ function LoginPage({ onLogin }: { onLogin: (user: DemoUser) => void }) {
 
       <section className="login-card-wrap">
         <form className="login-card" onSubmit={submit}>
-          <span className="badge blue"><Sparkles size={15} aria-hidden="true" /> Demo navegable</span>
+          <span className="badge blue"><Sparkles size={15} aria-hidden="true" /> Demo premium navegable</span>
           <h2 style={{ marginTop: 14 }}>Validacion institucional</h2>
           <p>Escribe un correo demo o elige un perfil para cargar nombre, campus y permisos automaticamente.</p>
           <div className="field">
@@ -253,7 +256,7 @@ function LoginPage({ onLogin }: { onLogin: (user: DemoUser) => void }) {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
-              placeholder="nombre@arq.edu.gt"
+              placeholder="nombre@umg.edu.gt"
             />
           </div>
           {error ? <p className="crisis-box" role="alert">{error}</p> : null}
@@ -308,6 +311,7 @@ function DashboardHero({
         </div>
       </div>
       <div className="hero-visual" aria-label="Estado del sistema">
+        <WellbeingScene compact />
         <div className="pulse-card">
           <div className="metric-header"><span>Abiertos visibles</span><Clock size={18} aria-hidden="true" /></div>
           <div className="metric-value">{pending + inProcess}</div>

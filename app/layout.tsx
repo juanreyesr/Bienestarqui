@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bienestar ARQ",
+  title: "Bienestar UMG",
   description: "Prototipo para gestionar bienestar, apoyo psicológico y formación preventiva en Arquitectura."
 };
 

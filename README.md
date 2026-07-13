@@ -1,4 +1,4 @@
-# Bienestar ARQ
+# Bienestar UMG
 
 Prototipo navegable para presentar un sistema de gestion de bienestar estudiantil/docente para Arquitectura.
 
@@ -23,12 +23,12 @@ Prototipo navegable para presentar un sistema de gestion de bienestar estudianti
 
 ## Cuentas demo
 
-- `coordinacion@arq.edu.gt`
-- `decano@arq.edu.gt`
-- `psicologia@arq.edu.gt`
-- `coord.xela@arq.edu.gt`
-- `maria.alvarez@arq.edu.gt`
-- `luis.ramos@arq.edu.gt`
+- `coordinacion@umg.edu.gt`
+- `decano@umg.edu.gt`
+- `psicologia@umg.edu.gt`
+- `coord.xela@umg.edu.gt`
+- `maria.alvarez@umg.edu.gt`
+- `luis.ramos@umg.edu.gt`
 
 ## Desarrollo
 
