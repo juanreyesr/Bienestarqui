@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Bienestar UMG",
-  description: "Prototipo para gestionar bienestar, apoyo psicológico y formación preventiva en Arquitectura."
+  description: "Sistema de gestion de bienestar, apoyo psicologico y formacion preventiva para Arquitectura UMG."
 };
 
 export default function RootLayout({

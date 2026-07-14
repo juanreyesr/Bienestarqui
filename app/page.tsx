@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -27,10 +27,13 @@ import {
   Stethoscope,
   UserCheck,
   Video,
-  X
+  X,
+  Trash2,
+  UserPlus,
+  Database
 } from "lucide-react";
 import {
-  adminActions,
+  adminPermissionLabels,
   campusTrainingStats,
   campuses,
   courses,
@@ -39,6 +42,7 @@ import {
   roleLabels,
   roleNavigation,
   trainingProgress,
+  type AdminPermission,
   type Course,
   type DemoUser,
   type RequestStatus,
@@ -74,12 +78,20 @@ const riskTone: Record<RiskLevel, "green" | "orange" | "red"> = {
   Alto: "red"
 };
 
+const storageKeys = {
+  users: "bienestar-umg:users:v2",
+  requests: "bienestar-umg:requests:v2",
+  courses: "bienestar-umg:courses:v2",
+  progress: "bienestar-umg:progress:v2"
+};
+
 export default function Home() {
+  const [users, setUsers] = usePersistentState<DemoUser[]>(storageKeys.users, demoUsers);
   const [currentUser, setCurrentUser] = useState<DemoUser | null>(null);
   const [activeView, setActiveView] = useState<ViewKey>("formacion");
-  const [requests, setRequests] = useState<SupportRequest[]>(initialRequests);
-  const [courseList, setCourseList] = useState<Course[]>(courses);
-  const [progressList, setProgressList] = useState<TrainingProgress[]>(trainingProgress);
+  const [requests, setRequests] = usePersistentState<SupportRequest[]>(storageKeys.requests, initialRequests);
+  const [courseList, setCourseList] = usePersistentState<Course[]>(storageKeys.courses, courses);
+  const [progressList, setProgressList] = usePersistentState<TrainingProgress[]>(storageKeys.progress, trainingProgress);
 
   function handleLogin(user: DemoUser) {
     setCurrentUser(user);
@@ -92,7 +104,7 @@ export default function Home() {
   }
 
   if (!currentUser) {
-    return <LoginPage onLogin={handleLogin} />;
+    return <LoginPage users={users} onLogin={handleLogin} />;
   }
 
   const navigation = roleNavigation[currentUser.role];
@@ -186,6 +198,7 @@ export default function Home() {
           {activeView === "formacion" && (
             <TrainingCenter
               user={currentUser}
+              users={users}
               courseList={courseList}
               setCourseList={setCourseList}
               progressList={progressList}
@@ -193,7 +206,15 @@ export default function Home() {
               setActiveView={setActiveView}
             />
           )}
-          {activeView === "usuarios" && <UsersPanel />}
+          {activeView === "usuarios" && (
+            <UsersPanel
+              currentUser={currentUser}
+              users={users}
+              setUsers={setUsers}
+              requests={requests}
+              setRequests={setRequests}
+            />
+          )}
           {activeView === "crisis" && <CrisisPanel requests={requests} />}
           {activeView === "privacidad" && <PrivacyPanel user={currentUser} />}
         </section>
@@ -202,15 +223,39 @@ export default function Home() {
   );
 }
 
-function LoginPage({ onLogin }: { onLogin: (user: DemoUser) => void }) {
-  const [email, setEmail] = useState("decano@umg.edu.gt");
+function usePersistentState<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(initialValue);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(key);
+      if (stored) setValue(JSON.parse(stored) as T);
+    } catch {
+      window.localStorage.removeItem(key);
+    } finally {
+      setIsReady(true);
+    }
+  }, [key]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }, [isReady, key, value]);
+
+  return [value, setValue] as const;
+}
+
+function LoginPage({ users, onLogin }: { users: DemoUser[]; onLogin: (user: DemoUser) => void }) {
+  const activeUsers = users.filter((user) => user.active !== false);
+  const [email, setEmail] = useState(activeUsers[0]?.email ?? "coordinacion@umg.edu.gt");
   const [error, setError] = useState("");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const user = demoUsers.find((candidate) => candidate.email.toLowerCase() === email.trim().toLowerCase());
+    const user = activeUsers.find((candidate) => candidate.email.toLowerCase() === email.trim().toLowerCase());
     if (!user) {
-      setError("Correo no encontrado en la base demo. Usa una cuenta institucional de prueba.");
+      setError("Correo no encontrado o usuario inactivo.");
       return;
     }
     setError("");
@@ -245,9 +290,8 @@ function LoginPage({ onLogin }: { onLogin: (user: DemoUser) => void }) {
 
       <section className="login-card-wrap">
         <form className="login-card" onSubmit={submit}>
-          <span className="badge blue"><Sparkles size={15} aria-hidden="true" /> Demo premium navegable</span>
+          <span className="badge blue"><Sparkles size={15} aria-hidden="true" /> Acceso institucional</span>
           <h2 style={{ marginTop: 14 }}>Validacion institucional</h2>
-          <p>Escribe un correo demo o elige un perfil para cargar nombre, campus y permisos automaticamente.</p>
           <div className="field">
             <label htmlFor="email">Correo institucional</label>
             <input
@@ -264,8 +308,8 @@ function LoginPage({ onLogin }: { onLogin: (user: DemoUser) => void }) {
             Validar acceso
             <ArrowRight size={18} aria-hidden="true" />
           </button>
-          <div className="demo-grid" aria-label="Cuentas demo">
-            {demoUsers.map((user) => (
+          <div className="demo-grid" aria-label="Accesos disponibles">
+            {activeUsers.map((user) => (
               <button className="demo-account" key={user.id} type="button" onClick={() => onLogin(user)}>
                 <strong>{roleLabels[user.role]}</strong>
                 <span>{user.email}</span>
@@ -1285,7 +1329,7 @@ function SupportForm({
   setRequests: React.Dispatch<React.SetStateAction<SupportRequest[]>>;
   setActiveView: (view: ViewKey) => void;
 }) {
-  const [reason, setReason] = useState("Necesito apoyo para manejar estres y carga academica.");
+  const [reason, setReason] = useState("");
   const [channel, setChannel] = useState("Videollamada");
   const [contactMethod, setContactMethod] = useState("Telefono");
   const [phone, setPhone] = useState("");
@@ -1333,13 +1377,13 @@ function SupportForm({
       <div className="panel-head">
         <div>
           <h2>Solicitud de apoyo</h2>
-          <p className="muted">La solicitud llega a gestiones pendientes y al psicologo segun prioridad.</p>
+          <p className="muted">Registra una solicitud con datos de contacto, consentimiento y prioridad.</p>
         </div>
         <span className="badge blue"><LockKeyhole size={15} aria-hidden="true" /> Consentimiento requerido</span>
       </div>
       <div className="crisis-box">
         <strong>Importante</strong>
-        <p>Este prototipo no representa un canal de emergencia 24/7. Si hay peligro inmediato, debe activarse el protocolo institucional y los servicios locales de emergencia.</p>
+        <p>Este canal registra apoyo y derivacion institucional. Si hay peligro inmediato, activa el protocolo de emergencia correspondiente.</p>
       </div>
       <div className="grid-2">
         <div className="field">
@@ -1395,7 +1439,7 @@ function SupportForm({
       </div>
       <div className="field">
         <label htmlFor="reason">Motivo general de solicitud</label>
-        <textarea id="reason" value={reason} onChange={(event) => setReason(event.target.value)} />
+        <textarea id="reason" value={reason} onChange={(event) => setReason(event.target.value)} required />
       </div>
       <label className="consent-box">
         <input type="checkbox" checked={urgent} onChange={(event) => setUrgent(event.target.checked)} />
@@ -1423,6 +1467,7 @@ function SupportForm({
 
 function TrainingCenter({
   user,
+  users,
   courseList,
   setCourseList,
   progressList,
@@ -1430,6 +1475,7 @@ function TrainingCenter({
   setActiveView
 }: {
   user: DemoUser;
+  users: DemoUser[];
   courseList: Course[];
   setCourseList: React.Dispatch<React.SetStateAction<Course[]>>;
   progressList: TrainingProgress[];
@@ -1470,7 +1516,7 @@ function TrainingCenter({
       <div className="panel-head">
         <div>
           <span className="badge blue"><BookOpen size={15} aria-hidden="true" /> Primero: formacion preventiva</span>
-          <h2 style={{ marginTop: 10 }}>Centro de Formacion ARQ</h2>
+          <h2 style={{ marginTop: 10 }}>Centro de Formacion UMG</h2>
           <p className="muted">Cursos disponibles para bienestar, convivencia, manejo de conflictos y acompanamiento humano.</p>
         </div>
         <div className="case-actions">
@@ -1573,6 +1619,7 @@ function TrainingCenter({
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="assign-title">
           <CourseAssignmentPanel
             user={user}
+            users={users}
             courseList={courseList}
             setProgressList={setProgressList}
             onClose={() => setShowAssigner(false)}
@@ -1683,9 +1730,10 @@ function CourseBuilder({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!title.trim() || !description.trim()) return;
     onSave({
       id: `c-${Date.now()}`,
-      title: title || "Nuevo curso de bienestar",
+      title: title.trim(),
       audience: "Estudiantes y docentes",
       classification,
       category,
@@ -1694,7 +1742,7 @@ function CourseBuilder({
       modules: [resourceUrl ? "Video principal" : "Contenido inicial", "Material de apoyo", certificateEvaluation ? "Evaluacion para certificado" : "Cierre"],
       completion: 0,
       assignedBy: "M.A. Juan J. Reyes",
-      description: description || "Recurso formativo creado como vista previa del aula virtual.",
+      description: description.trim(),
       platform,
       coverUrl,
       publishDate,
@@ -1721,7 +1769,7 @@ function CourseBuilder({
         <div>
           <div className="field dark">
             <label htmlFor="course-title">Titulo</label>
-            <input id="course-title" value={title} onChange={(event) => setTitle(event.target.value)} />
+            <input id="course-title" value={title} onChange={(event) => setTitle(event.target.value)} required />
           </div>
           <div className="field dark">
             <label htmlFor="course-category">Categoria</label>
@@ -1772,7 +1820,7 @@ function CourseBuilder({
           </div>
           <div className="field dark">
             <label htmlFor="description">Descripcion</label>
-            <textarea id="description" value={description} onChange={(event) => setDescription(event.target.value)} />
+            <textarea id="description" value={description} onChange={(event) => setDescription(event.target.value)} required />
           </div>
           <div className="field dark">
             <label htmlFor="publish">Programar publicacion</label>
@@ -1791,16 +1839,19 @@ function CourseBuilder({
 
 function CourseAssignmentPanel({
   user,
+  users,
   courseList,
   setProgressList,
   onClose
 }: {
   user: DemoUser;
+  users: DemoUser[];
   courseList: Course[];
   setProgressList: React.Dispatch<React.SetStateAction<TrainingProgress[]>>;
   onClose: () => void;
 }) {
-  const people = demoUsers.filter((person) => {
+  const people = users.filter((person) => {
+    if (person.active === false) return false;
     if (person.role === "decano" || person.role === "psicologo") return false;
     if (user.role === "coordinador_sede" && person.kind === "Coordinador") return false;
     if (user.role === "coordinador_sede") return person.campus === user.campus;
@@ -1904,7 +1955,7 @@ function CourseAssignmentPanel({
             ? `Se asignara a ${people.filter((person) => person.kind === blockKind).length} persona(s) del bloque seleccionado.`
             : selectedPeopleRecords.length
               ? `Seleccionados: ${selectedPeopleRecords.length} persona(s).`
-              : "Marca una o varias personas de la base demo."}
+              : "Marca una o varias personas del directorio."}
         </p>
       </div>
       {mode === "individual" ? (
@@ -1939,24 +1990,175 @@ function CourseAssignmentPanel({
   );
 }
 
-function UsersPanel() {
+function UsersPanel({
+  currentUser,
+  users,
+  setUsers,
+  requests,
+  setRequests
+}: {
+  currentUser: DemoUser;
+  users: DemoUser[];
+  setUsers: React.Dispatch<React.SetStateAction<DemoUser[]>>;
+  requests: SupportRequest[];
+  setRequests: React.Dispatch<React.SetStateAction<SupportRequest[]>>;
+}) {
+  const [query, setQuery] = useState("");
+  const [caseQuery, setCaseQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    carnet: "",
+    role: "coordinador_sede" as DemoUser["role"],
+    campus: campuses[0],
+    title: "",
+    permissions: ["manage_cases", "manage_courses"] as AdminPermission[]
+  });
+  const adminRoles: DemoUser["role"][] = ["coordinador_proyecto", "decano", "psicologo", "coordinador_sede"];
+  const permissions = Object.keys(adminPermissionLabels) as AdminPermission[];
+  const administrativeUsers = users.filter((user) => user.role !== "estudiante_docente");
+  const filteredAdmins = administrativeUsers.filter((user) => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return true;
+    return [user.name, user.email, user.carnet, user.campus, roleLabels[user.role]]
+      .some((value) => value.toLowerCase().includes(normalized));
+  });
+  const filteredCases = searchRequests(requests, caseQuery);
+  const pageSize = 8;
+  const totalPages = Math.max(1, Math.ceil(filteredCases.length / pageSize));
+  const pageCases = filteredCases.slice((page - 1) * pageSize, page * pageSize);
+  const canDeleteRecords = hasPermission(currentUser, "delete_records");
+
+  function togglePermission(permission: AdminPermission) {
+    setNewUser((current) => ({
+      ...current,
+      permissions: current.permissions.includes(permission)
+        ? current.permissions.filter((item) => item !== permission)
+        : [...current.permissions, permission]
+    }));
+  }
+
+  function addAdministrativeUser(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!newUser.name.trim() || !newUser.email.trim()) return;
+    const email = newUser.email.trim().toLowerCase();
+    if (users.some((user) => user.email.toLowerCase() === email)) return;
+    const now = new Date().toISOString().slice(0, 10);
+    const user: DemoUser = {
+      id: `u-admin-${Date.now()}`,
+      name: newUser.name.trim(),
+      email,
+      carnet: newUser.carnet.trim() || `EMP-${Date.now().toString().slice(-5)}`,
+      role: newUser.role,
+      kind: roleToKind(newUser.role),
+      campus: newUser.campus,
+      title: newUser.title.trim() || roleLabels[newUser.role],
+      permissions: newUser.permissions,
+      active: true,
+      createdAt: now
+    };
+    setUsers((current) => [user, ...current]);
+    setNewUser({
+      name: "",
+      email: "",
+      carnet: "",
+      role: "coordinador_sede",
+      campus: campuses[0],
+      title: "",
+      permissions: ["manage_cases", "manage_courses"]
+    });
+  }
+
+  function updateAdministrativeUser(id: string, updates: Partial<DemoUser>) {
+    setUsers((current) =>
+      current.map((user) =>
+        user.id === id
+          ? { ...user, ...updates, kind: updates.role ? roleToKind(updates.role) : user.kind }
+          : user
+      )
+    );
+  }
+
+  function removeAdministrativeUser(user: DemoUser) {
+    if (user.id === currentUser.id) return;
+    const confirmed = window.confirm(`Eliminar a ${user.name} del directorio administrativo?`);
+    if (!confirmed) return;
+    setUsers((current) => current.filter((item) => item.id !== user.id));
+    setRequests((current) =>
+      current.map((request) => request.assignedTo === user.name ? { ...request, assignedTo: undefined } : request)
+    );
+  }
+
+  function deleteCase(request: SupportRequest) {
+    if (!canDeleteRecords) return;
+    const confirmed = window.confirm(`Eliminar expediente ${request.id} de ${request.personName}? Esta accion no se puede deshacer.`);
+    if (!confirmed) return;
+    setRequests((current) => current.filter((item) => item.id !== request.id));
+  }
+
   return (
     <section className="panel">
       <div className="panel-head">
         <div>
-          <h2>Usuarios, roles y sedes</h2>
-          <p className="muted">Base demo que simula la importacion institucional por correo.</p>
+          <h2>Usuarios, roles y permisos</h2>
+          <p className="muted">Directorio administrativo para controlar acceso, sedes y permisos operativos.</p>
         </div>
+        <span className="badge blue"><Database size={15} aria-hidden="true" /> {users.length} usuarios</span>
       </div>
-      <div className="grid-3">
-        {adminActions.map(({ label, Icon }) => (
-          <button className="button secondary" key={label} type="button">
-            <Icon size={18} aria-hidden="true" />
-            {label}
-          </button>
-        ))}
+
+      <form className="admin-create-grid" onSubmit={addAdministrativeUser}>
+        <div className="field">
+          <label htmlFor="admin-name">Nombre</label>
+          <input id="admin-name" value={newUser.name} onChange={(event) => setNewUser((current) => ({ ...current, name: event.target.value }))} required />
+        </div>
+        <div className="field">
+          <label htmlFor="admin-email">Correo institucional</label>
+          <input id="admin-email" type="email" value={newUser.email} onChange={(event) => setNewUser((current) => ({ ...current, email: event.target.value }))} required />
+        </div>
+        <div className="field">
+          <label htmlFor="admin-carnet">Codigo interno</label>
+          <input id="admin-carnet" value={newUser.carnet} onChange={(event) => setNewUser((current) => ({ ...current, carnet: event.target.value }))} />
+        </div>
+        <div className="field">
+          <label htmlFor="admin-role">Rol</label>
+          <select id="admin-role" value={newUser.role} onChange={(event) => setNewUser((current) => ({ ...current, role: event.target.value as DemoUser["role"] }))}>
+            {adminRoles.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="admin-campus">Sede</label>
+          <select id="admin-campus" value={newUser.campus} onChange={(event) => setNewUser((current) => ({ ...current, campus: event.target.value }))}>
+            {campuses.map((campus) => <option key={campus}>{campus}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="admin-title">Cargo</label>
+          <input id="admin-title" value={newUser.title} onChange={(event) => setNewUser((current) => ({ ...current, title: event.target.value }))} />
+        </div>
+        <fieldset className="permission-field">
+          <legend>Permisos</legend>
+          {permissions.map((permission) => (
+            <label key={permission}>
+              <input
+                type="checkbox"
+                checked={newUser.permissions.includes(permission)}
+                onChange={() => togglePermission(permission)}
+              />
+              {adminPermissionLabels[permission]}
+            </label>
+          ))}
+        </fieldset>
+        <button className="button primary" type="submit">
+          <UserPlus size={18} aria-hidden="true" />
+          Crear usuario
+        </button>
+      </form>
+
+      <div className="search-panel">
+        <label htmlFor="admin-search"><Search size={18} aria-hidden="true" /> Buscar administrativo</label>
+        <input id="admin-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, correo, rol o sede" />
       </div>
-      <div style={{ height: 18 }} />
       <div className="table-wrap">
         <table>
           <thead>
@@ -1966,22 +2168,124 @@ function UsersPanel() {
               <th>Carné</th>
               <th>Rol</th>
               <th>Sede</th>
-              <th>Descripcion</th>
+              <th>Permisos</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {demoUsers.map((user) => (
+            {filteredAdmins.map((user) => (
               <tr key={user.id}>
                 <td>{user.name}</td>
                 <td>{user.email}</td>
                 <td>{user.carnet}</td>
-                <td>{roleLabels[user.role]}</td>
-                <td>{user.campus}</td>
-                <td>{user.title}</td>
+                <td>
+                  <select
+                    value={user.role}
+                    onChange={(event) => updateAdministrativeUser(user.id, { role: event.target.value as DemoUser["role"] })}
+                  >
+                    {adminRoles.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}
+                  </select>
+                </td>
+                <td>
+                  <select value={user.campus} onChange={(event) => updateAdministrativeUser(user.id, { campus: event.target.value })}>
+                    {campuses.map((campus) => <option key={campus}>{campus}</option>)}
+                  </select>
+                </td>
+                <td>
+                  <div className="permission-chips">
+                    {(user.permissions ?? []).map((permission) => <span key={permission}>{adminPermissionLabels[permission]}</span>)}
+                  </div>
+                </td>
+                <td>
+                  <button
+                    className={`button ${user.active === false ? "secondary" : "primary"}`}
+                    type="button"
+                    onClick={() => updateAdministrativeUser(user.id, { active: user.active === false })}
+                  >
+                    {user.active === false ? "Activar" : "Activo"}
+                  </button>
+                </td>
+                <td>
+                  <button
+                    className="button danger"
+                    type="button"
+                    onClick={() => removeAdministrativeUser(user)}
+                    disabled={user.id === currentUser.id}
+                  >
+                    <Trash2 size={18} aria-hidden="true" />
+                    Eliminar
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="panel-subsection admin-records">
+        <div className="panel-head">
+          <div>
+            <h2>Expedientes de estudiantes</h2>
+            <p className="muted">Borra expedientes de muestra o solicitudes que deban retirarse del sistema.</p>
+          </div>
+          <span className="badge blue">{filteredCases.length} expedientes</span>
+        </div>
+        <div className="search-panel">
+          <label htmlFor="case-admin-search"><Search size={18} aria-hidden="true" /> Buscar expediente</label>
+          <input
+            id="case-admin-search"
+            value={caseQuery}
+            onChange={(event) => {
+              setCaseQuery(event.target.value);
+              setPage(1);
+            }}
+            placeholder="Nombre, carné, correo, sede o codigo"
+          />
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Expediente</th>
+                <th>Solicitante</th>
+                <th>Sede</th>
+                <th>Estado</th>
+                <th>Riesgo</th>
+                <th>Actualizado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pageCases.map((request) => (
+                <tr key={request.id}>
+                  <td>{request.id}</td>
+                  <td>{request.personName}<br /><span className="muted">{request.personCarnet}</span></td>
+                  <td>{request.campus}</td>
+                  <td><span className={`badge ${statusTone[request.status]}`}>{request.status}</span></td>
+                  <td><span className={`badge ${riskTone[request.risk]}`}>{request.risk}</span></td>
+                  <td>{request.lastUpdate}</td>
+                  <td>
+                    <button className="button danger" type="button" onClick={() => deleteCase(request)} disabled={!canDeleteRecords}>
+                      <Trash2 size={18} aria-hidden="true" />
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {pageCases.length === 0 ? (
+                <tr>
+                  <td colSpan={7}>No hay expedientes con ese filtro.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+        <div className="pagination-row">
+          <button className="button secondary" type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>Anterior</button>
+          <span>Pagina {page} de {totalPages}</span>
+          <button className="button secondary" type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page === totalPages}>Siguiente</button>
+        </div>
       </div>
     </section>
   );
@@ -2143,6 +2447,18 @@ function personMatchesQuery(person: DemoUser, query: string) {
   return [person.name, person.email, person.carnet].some((value) => normalized.includes(value.toLowerCase()) || value.toLowerCase().includes(normalized));
 }
 
+function roleToKind(role: DemoUser["role"]): DemoUser["kind"] {
+  if (role === "decano") return "Decano";
+  if (role === "psicologo") return "Psicologo";
+  if (role === "estudiante_docente") return "Estudiante";
+  return "Coordinador";
+}
+
+function hasPermission(user: DemoUser, permission: AdminPermission) {
+  if (user.role === "coordinador_proyecto") return true;
+  return Boolean(user.permissions?.includes(permission));
+}
+
 function canReopenCases(user: DemoUser) {
   return user.role === "decano" || user.role === "psicologo" || user.role === "coordinador_proyecto" || user.role === "coordinador_sede";
 }
@@ -2178,5 +2494,5 @@ function heroDescription(user: DemoUser) {
   if (user.role === "psicologo") return "Prioriza solicitudes, registra sesiones privadas, activa derivaciones y mantiene seguimiento clinico restringido.";
   if (user.role === "coordinador_proyecto") return "Administra solicitudes, sedes, permisos, formacion y estadisticas para que el programa sea sostenible.";
   if (user.role === "coordinador_sede") return "Solicita apoyo para tu campus, asigna rutas formativas y revisa avance docente sin acceder a notas privadas.";
-  return "Accede a consulta, da seguimiento a tus solicitudes y completa cursos preventivos del Centro de Formacion ARQ.";
+  return "Accede a consulta, da seguimiento a tus solicitudes y completa cursos preventivos del Centro de Formacion UMG.";
 }

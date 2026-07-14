@@ -24,6 +24,12 @@ export type UserKind = "Estudiante" | "Docente" | "Coordinador" | "Decano" | "Ps
 export type RequestStatus = "Pendiente" | "En proceso" | "Atendida" | "Derivada" | "No se presentó";
 export type RiskLevel = "Bajo" | "Medio" | "Alto";
 export type CourseClassification = "Habilidades blandas" | "Habilidades técnicas" | "Bienestar integral";
+export type AdminPermission =
+  | "manage_users"
+  | "manage_cases"
+  | "manage_courses"
+  | "view_reports"
+  | "delete_records";
 
 export type DemoUser = {
   id: string;
@@ -34,6 +40,9 @@ export type DemoUser = {
   kind: UserKind;
   campus: string;
   title: string;
+  permissions?: AdminPermission[];
+  active?: boolean;
+  createdAt?: string;
 };
 
 export type SupportRequest = {
@@ -118,6 +127,14 @@ export type NavItem = {
   Icon: LucideIcon;
 };
 
+export const adminPermissionLabels: Record<AdminPermission, string> = {
+  manage_users: "Usuarios",
+  manage_cases: "Expedientes",
+  manage_courses: "Formacion",
+  view_reports: "Reportes",
+  delete_records: "Borrado"
+};
+
 export const demoUsers: DemoUser[] = [
   {
     id: "u-admin",
@@ -127,7 +144,10 @@ export const demoUsers: DemoUser[] = [
     role: "coordinador_proyecto",
     kind: "Coordinador",
     campus: "Central",
-    title: "Coordinador del Proyecto"
+    title: "Coordinador del Proyecto",
+    permissions: ["manage_users", "manage_cases", "manage_courses", "view_reports", "delete_records"],
+    active: true,
+    createdAt: "2026-07-01"
   },
   {
     id: "u-decano",
@@ -137,7 +157,10 @@ export const demoUsers: DemoUser[] = [
     role: "decano",
     kind: "Decano",
     campus: "Facultad",
-    title: "Decano de Arquitectura"
+    title: "Decano de Arquitectura",
+    permissions: ["view_reports", "manage_courses"],
+    active: true,
+    createdAt: "2026-07-01"
   },
   {
     id: "u-psico",
@@ -147,7 +170,10 @@ export const demoUsers: DemoUser[] = [
     role: "psicologo",
     kind: "Psicologo",
     campus: "Central",
-    title: "Psicologa de Planta"
+    title: "Psicologa de Planta",
+    permissions: ["manage_cases", "manage_courses"],
+    active: true,
+    createdAt: "2026-07-01"
   },
   {
     id: "u-coord-xela",
@@ -157,7 +183,10 @@ export const demoUsers: DemoUser[] = [
     role: "coordinador_sede",
     kind: "Coordinador",
     campus: "Quetzaltenango",
-    title: "Coordinadora de Sede"
+    title: "Coordinadora de Sede",
+    permissions: ["manage_cases", "manage_courses", "view_reports"],
+    active: true,
+    createdAt: "2026-07-01"
   },
   {
     id: "u-student",
@@ -187,7 +216,10 @@ export const demoUsers: DemoUser[] = [
     role: "coordinador_sede",
     kind: "Coordinador",
     campus: "San Marcos",
-    title: "Coordinador de Sede"
+    title: "Coordinador de Sede",
+    permissions: ["manage_cases", "manage_courses", "view_reports"],
+    active: true,
+    createdAt: "2026-07-01"
   },
   {
     id: "u-student-sm",
@@ -387,7 +419,7 @@ export const courses: Course[] = [
     modules: ["Tipos de conflicto", "Conversaciones de reparacion", "Acuerdos de equipo"],
     completion: 34,
     assignedBy: "Coordinacion del Proyecto",
-    description: "Vista previa para practicar acuerdos, roles y comunicacion durante proyectos colaborativos.",
+    description: "Practica acuerdos, roles y comunicacion durante proyectos colaborativos.",
     platform: "YouTube",
     publishDate: "2026-07-12",
     certificateEvaluation: false
@@ -402,7 +434,7 @@ export const courses: Course[] = [
     duration: "4 modulos",
     modules: ["Planificacion inversa", "Sueno y energia", "Bloques de avance", "Cierre saludable"],
     completion: 51,
-    assignedBy: "Centro de Formacion ARQ",
+    assignedBy: "Centro de Formacion UMG",
     description: "Contenido preventivo para reducir agotamiento y mejorar continuidad academica.",
     platform: "Teams",
     publishDate: "2026-07-15",
@@ -434,7 +466,7 @@ export const courses: Course[] = [
     duration: "4 modulos",
     modules: ["Jerarquia visual", "Composicion", "Escalas", "Entrega final"],
     completion: 12,
-    assignedBy: "Centro de Formacion ARQ",
+    assignedBy: "Centro de Formacion UMG",
     description: "Recurso tecnico para mejorar la claridad de laminas, diagramas y presentaciones de taller.",
     platform: "YouTube",
     publishDate: "2026-07-20",
@@ -450,8 +482,8 @@ export const courses: Course[] = [
     duration: "3 modulos",
     modules: ["Partidas", "Cantidades", "Costos base", "Revision"],
     completion: 18,
-    assignedBy: "Centro de Formacion ARQ",
-    description: "Vista previa para fortalecer lectura tecnica, estimaciones iniciales y orden de presupuestos.",
+    assignedBy: "Centro de Formacion UMG",
+    description: "Fortalece lectura tecnica, estimaciones iniciales y orden de presupuestos.",
     platform: "Teams",
     publishDate: "2026-07-22",
     certificateEvaluation: false
@@ -565,7 +597,7 @@ export const roleNavigation: Record<Role, NavItem[]> = {
     { key: "privacidad", label: "Alcance de datos", Icon: Shield }
   ],
   estudiante_docente: [
-    { key: "formacion", label: "Centro de Formacion ARQ", Icon: BookOpen },
+    { key: "formacion", label: "Centro de Formacion UMG", Icon: BookOpen },
     { key: "solicitud", label: "Bienestar estudiantil", Icon: HeartHandshake },
     { key: "privacidad", label: "Privacidad", Icon: Shield }
   ]

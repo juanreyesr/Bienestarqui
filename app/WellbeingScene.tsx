@@ -3,20 +3,23 @@
 import { useEffect, useRef } from "react";
 import {
   AmbientLight,
+  BoxGeometry,
   BufferAttribute,
   BufferGeometry,
   Color,
   DirectionalLight,
+  EdgesGeometry,
   Group,
+  GridHelper,
   Line,
   LineBasicMaterial,
+  LineSegments,
   Mesh,
   MeshPhysicalMaterial,
   PerspectiveCamera,
   Points,
   PointsMaterial,
   Scene,
-  TorusGeometry,
   WebGLRenderer
 } from "three";
 
@@ -36,61 +39,92 @@ export function WellbeingScene({ compact = false }: WellbeingSceneProps) {
     const scene = new Scene();
     scene.background = null;
 
-    const camera = new PerspectiveCamera(42, 1, 0.1, 100);
-    camera.position.set(0, 0, compact ? 8 : 7);
+    const camera = new PerspectiveCamera(38, 1, 0.1, 100);
+    camera.position.set(3.8, compact ? 2.5 : 3.1, compact ? 7.5 : 8.2);
+    camera.lookAt(0, -0.25, 0);
 
     const renderer = new WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
     renderer.setClearAlpha(0);
     hostElement.appendChild(renderer.domElement);
 
-    const system = new Group();
-    scene.add(system);
+    const district = new Group();
+    scene.add(district);
 
     const blue = new Color("#083d77");
     const red = new Color("#bb1d2b");
     const silver = new Color("#f6f8fb");
 
-    const ringMaterial = new MeshPhysicalMaterial({
+    const towerMaterial = new MeshPhysicalMaterial({
       color: blue,
       emissive: blue,
-      emissiveIntensity: 0.12,
+      emissiveIntensity: 0.04,
       metalness: 0.42,
-      roughness: 0.22,
+      roughness: 0.38,
       clearcoat: 0.8,
       transparent: true,
-      opacity: 0.88
+      opacity: 0.9
     });
-    const alertMaterial = new MeshPhysicalMaterial({
+    const accentMaterial = new MeshPhysicalMaterial({
       color: red,
       emissive: red,
-      emissiveIntensity: 0.2,
-      metalness: 0.2,
-      roughness: 0.28,
+      emissiveIntensity: 0.08,
+      metalness: 0.22,
+      roughness: 0.34,
       clearcoat: 0.65,
       transparent: true,
-      opacity: 0.84
+      opacity: 0.78
+    });
+    const glassMaterial = new MeshPhysicalMaterial({
+      color: silver,
+      metalness: 0.12,
+      roughness: 0.2,
+      clearcoat: 0.9,
+      transparent: true,
+      opacity: 0.72
     });
 
-    const rings: Mesh[] = [];
-    for (let index = 0; index < 4; index += 1) {
-      const geometry = new TorusGeometry(1.15 + index * 0.34, 0.012 + index * 0.003, 16, 144);
-      const mesh = new Mesh(geometry, index === 2 ? alertMaterial : ringMaterial);
-      mesh.rotation.set(index * 0.46, index * 0.36, index * 0.22);
-      mesh.position.z = -index * 0.12;
-      rings.push(mesh);
-      system.add(mesh);
-    }
+    const grid = new GridHelper(7.2, 18, "#ffffff", "#6f8fc0");
+    grid.position.y = -1.34;
+    (grid.material as LineBasicMaterial).transparent = true;
+    (grid.material as LineBasicMaterial).opacity = compact ? 0.16 : 0.22;
+    district.add(grid);
+
+    const blocks: Array<[number, number, number, number, number, number, MeshPhysicalMaterial]> = [
+      [-1.8, -0.72, 0.2, 0.52, 1.22, 0.52, towerMaterial],
+      [-1.08, -0.92, -0.54, 0.44, 0.82, 0.48, glassMaterial],
+      [-0.38, -0.58, 0.1, 0.62, 1.55, 0.58, towerMaterial],
+      [0.44, -0.98, -0.38, 0.5, 0.72, 0.5, glassMaterial],
+      [1.16, -0.72, 0.32, 0.7, 1.08, 0.62, accentMaterial],
+      [1.94, -0.86, -0.44, 0.42, 0.86, 0.46, towerMaterial]
+    ];
+    const blockMeshes: Mesh[] = [];
+    const edgeLines: LineSegments[] = [];
+    blocks.forEach(([x, y, z, width, height, depth, material]) => {
+      const geometry = new BoxGeometry(width, height, depth);
+      const block = new Mesh(geometry, material);
+      block.position.set(x, y + height / 2, z);
+      blockMeshes.push(block);
+      district.add(block);
+
+      const edge = new LineSegments(
+        new EdgesGeometry(geometry),
+        new LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.32 })
+      );
+      edge.position.copy(block.position);
+      edgeLines.push(edge);
+      district.add(edge);
+    });
 
     const nodeGeometry = new BufferGeometry();
-    const nodeCount = compact ? 72 : 116;
+    const nodeCount = compact ? 42 : 68;
     const nodePositions = new Float32Array(nodeCount * 3);
     for (let index = 0; index < nodeCount; index += 1) {
-      const angle = index * 2.399963;
-      const radius = 0.75 + (index % 19) * 0.085;
-      nodePositions[index * 3] = Math.cos(angle) * radius;
-      nodePositions[index * 3 + 1] = Math.sin(angle) * radius * 0.68;
-      nodePositions[index * 3 + 2] = ((index % 11) - 5) * 0.08;
+      const lane = index % 6;
+      const row = Math.floor(index / 6);
+      nodePositions[index * 3] = -2.8 + lane * 1.08;
+      nodePositions[index * 3 + 1] = -1.28 + (index % 2) * 0.04;
+      nodePositions[index * 3 + 2] = -1.8 + row * 0.36;
     }
     nodeGeometry.setAttribute("position", new BufferAttribute(nodePositions, 3));
 
@@ -98,25 +132,25 @@ export function WellbeingScene({ compact = false }: WellbeingSceneProps) {
       nodeGeometry,
       new PointsMaterial({
         color: silver,
-        size: compact ? 0.028 : 0.036,
+        size: compact ? 0.018 : 0.024,
         transparent: true,
-        opacity: 0.74,
+        opacity: 0.5,
         depthWrite: false
       })
     );
-    system.add(nodes);
+    district.add(nodes);
 
-    const pathMaterial = new LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.16 });
+    const pathMaterial = new LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.32 });
     const pathGeometry = new BufferGeometry();
     const pathPositions = new Float32Array([
-      -1.75, -0.48, 0.15,
-      -0.82, 0.36, -0.02,
-      0.02, -0.08, 0.16,
-      0.92, 0.54, -0.08,
-      1.72, -0.22, 0.1
+      -2.6, -1.18, 1.2,
+      -1.42, -1.08, 0.52,
+      -0.24, -1.12, 0.86,
+      0.74, -1.04, 0.12,
+      2.36, -1.14, 0.72
     ]);
     pathGeometry.setAttribute("position", new BufferAttribute(pathPositions, 3));
-    system.add(new Line(pathGeometry, pathMaterial));
+    district.add(new Line(pathGeometry, pathMaterial));
 
     scene.add(new AmbientLight("#ffffff", 1.65));
     const keyLight = new DirectionalLight("#ffffff", 3.1);
@@ -145,13 +179,10 @@ export function WellbeingScene({ compact = false }: WellbeingSceneProps) {
 
     function animate(time: number) {
       const t = time * 0.001;
-      system.rotation.y += ((pointerX * 0.18) - system.rotation.y) * 0.035;
-      system.rotation.x += ((-pointerY * 0.1) - system.rotation.x) * 0.035;
-      rings.forEach((ring, index) => {
-        ring.rotation.z = t * (0.08 + index * 0.012);
-        ring.rotation.x += prefersReducedMotion ? 0 : 0.0015 + index * 0.0004;
-      });
-      nodes.rotation.z = prefersReducedMotion ? 0.18 : t * 0.035;
+      district.rotation.y += ((-0.42 + pointerX * 0.08) - district.rotation.y) * 0.035;
+      district.rotation.x += ((0.18 - pointerY * 0.04) - district.rotation.x) * 0.035;
+      district.position.y = prefersReducedMotion ? 0 : Math.sin(t * 0.75) * 0.025;
+      nodes.position.x = prefersReducedMotion ? 0 : Math.sin(t * 0.35) * 0.05;
       renderer.render(scene, camera);
       hostElement.dataset.sceneReady = "true";
       if (!prefersReducedMotion) frameId = window.requestAnimationFrame(animate);
@@ -168,12 +199,19 @@ export function WellbeingScene({ compact = false }: WellbeingSceneProps) {
       observer.disconnect();
       hostElement.removeEventListener("pointermove", onPointerMove);
       hostElement.removeChild(renderer.domElement);
-      ringMaterial.dispose();
-      alertMaterial.dispose();
+      towerMaterial.dispose();
+      accentMaterial.dispose();
+      glassMaterial.dispose();
       pathMaterial.dispose();
       nodeGeometry.dispose();
       pathGeometry.dispose();
-      rings.forEach((ring) => ring.geometry.dispose());
+      blockMeshes.forEach((block) => block.geometry.dispose());
+      edgeLines.forEach((edge) => {
+        edge.geometry.dispose();
+        (edge.material as LineBasicMaterial).dispose();
+      });
+      (grid.geometry as BufferGeometry).dispose();
+      (grid.material as LineBasicMaterial).dispose();
       renderer.dispose();
     };
   }, [compact]);

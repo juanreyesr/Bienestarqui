@@ -1,4 +1,4 @@
--- Bienestar ARQ - esquema base para convertir el prototipo en Supabase.
+-- Bienestar UMG - esquema base para gestion operativa en Supabase.
 -- En produccion: usar Supabase Auth, app_metadata para roles y RLS en todas las tablas expuestas.
 
 create extension if not exists pgcrypto;

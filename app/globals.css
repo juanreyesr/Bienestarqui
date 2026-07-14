@@ -1249,18 +1249,20 @@ th {
   }
 
   .mobile-tabs {
-    position: sticky;
-    top: 72px;
+    position: static;
     z-index: 15;
     display: flex;
     gap: 8px;
     overflow-x: auto;
     border-bottom: 1px solid var(--line);
-    background: rgba(247, 250, 248, 0.94);
+    background: rgba(255, 255, 255, 0.96);
     padding: 10px 16px;
+    box-shadow: 0 12px 28px rgba(16, 24, 40, 0.08);
+    backdrop-filter: blur(20px) saturate(160%);
   }
 
   .mobile-tabs .nav-button {
+    flex: 0 0 auto;
     width: auto;
     white-space: nowrap;
   }
@@ -1880,6 +1882,234 @@ tr:hover td {
 
   .user-pill {
     width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Operational refinement: readable management UI and architectural 3D framing. */
+.hero-card {
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+}
+
+.hero-copy h1 {
+  max-width: 760px;
+  font-size: clamp(2.35rem, 4.2vw, 4.35rem);
+  line-height: 1.02;
+}
+
+.hero-copy p {
+  color: #536073;
+  line-height: 1.6;
+}
+
+.hero-visual {
+  align-content: end;
+  min-height: 420px;
+}
+
+.hero-visual .wellbeing-scene {
+  inset: 0 -54px auto auto;
+  width: min(44vw, 580px);
+  height: min(44vw, 520px);
+  opacity: 0.82;
+}
+
+.pulse-card {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(8, 20, 42, 0.52);
+}
+
+.button:disabled,
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+  transform: none;
+}
+
+.button.danger {
+  border-color: rgba(187, 29, 43, 0.24);
+  background: #fff0f1;
+  color: #9f1722;
+}
+
+.button.danger:hover {
+  border-color: rgba(187, 29, 43, 0.38);
+  background: #ffe2e5;
+}
+
+.admin-create-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(29, 29, 31, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.permission-field {
+  display: flex;
+  grid-column: span 2;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0;
+  border: 1px solid rgba(29, 29, 31, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.permission-field legend {
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.permission-field label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  color: #344054;
+  font-weight: 700;
+}
+
+.permission-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 190px;
+}
+
+.permission-chips span {
+  border-radius: 999px;
+  background: #edf4ff;
+  padding: 4px 8px;
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-records {
+  margin-top: 22px;
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+td select {
+  min-height: 40px;
+  border: 1px solid rgba(29, 29, 31, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px 10px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.course-builder {
+  border-color: rgba(29, 29, 31, 0.1);
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: var(--depth-2);
+}
+
+.builder-head {
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(7, 59, 121, 0.98), rgba(3, 20, 45, 0.96));
+  padding: 18px;
+}
+
+.builder-head h2 {
+  color: #ffffff;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+.field.dark label,
+.platform-field legend {
+  color: #344054;
+}
+
+.field.dark input,
+.field.dark select,
+.field.dark textarea {
+  border-color: rgba(29, 29, 31, 0.14);
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.field.dark input::placeholder,
+.field.dark textarea::placeholder,
+.field.dark span {
+  color: #667085;
+}
+
+.platform-button {
+  border-color: rgba(29, 29, 31, 0.14);
+  background: #ffffff;
+  color: #344054;
+}
+
+.platform-button.selected {
+  border-color: rgba(7, 59, 121, 0.42);
+  background: #edf4ff;
+  color: var(--brand);
+}
+
+.certificate-box {
+  min-height: auto;
+  border-color: rgba(7, 59, 121, 0.18);
+  background: #edf4ff;
+  color: var(--brand);
+  font-size: 1rem;
+}
+
+@media (max-width: 1040px) {
+  .admin-create-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .permission-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-copy {
+    padding: 24px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.1rem, 11vw, 3.2rem);
+  }
+
+  .hero-visual {
+    min-height: 320px;
+  }
+
+  .hero-visual .wellbeing-scene {
+    inset: 0 -44px auto auto;
+    width: 115vw;
+    height: 92vw;
+  }
+
+  .admin-create-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .permission-field {
+    grid-column: auto;
+  }
+
+  .pagination-row {
     justify-content: space-between;
   }
 }
