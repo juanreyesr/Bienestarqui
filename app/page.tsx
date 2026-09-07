@@ -114,10 +114,12 @@ export default function Home() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand-row">
-          <div className="brand-mark" aria-hidden="true">UMG</div>
+          <div className="brand-mark">
+            <img src="/umg-seal.png" alt="Escudo oficial de la Universidad Mariano Gálvez de Guatemala" />
+          </div>
           <div className="brand-copy">
             <strong>Bienestar UMG</strong>
-            <span>Arquitectura · Gestion, derivacion y prevencion</span>
+            <span>Facultad de Arquitectura · Gestión, derivación y prevención</span>
           </div>
         </div>
         <div className="user-pill">
@@ -268,7 +270,9 @@ function LoginPage({ users, onLogin }: { users: DemoUser[]; onLogin: (user: Demo
         <WellbeingScene />
         <div>
           <div className="brand-row">
-            <div className="brand-mark" aria-hidden="true">UMG</div>
+            <div className="brand-mark">
+              <img src="/umg-seal.png" alt="Escudo oficial de la Universidad Mariano Gálvez de Guatemala" />
+            </div>
             <div className="brand-copy">
               <strong>Bienestar UMG</strong>
               <span>Facultad de Arquitectura</span>

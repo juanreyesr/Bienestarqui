@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bienestar UMG",
-  description: "Sistema de gestion de bienestar, apoyo psicologico y formacion preventiva para Arquitectura UMG."
+  title: "Bienestar UMG | Facultad de Arquitectura",
+  description: "Plataforma institucional de bienestar, acompañamiento y formación preventiva para la Facultad de Arquitectura UMG."
 };
 
 export default function RootLayout({

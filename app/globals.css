@@ -1937,6 +1937,110 @@ button:disabled {
   background: #ffe2e5;
 }
 
+/* UMG institutional refinement: quiet hierarchy, one visual language and readable data. */
+:root {
+  --brand: #06356d;
+  --brand-2: #0a4f96;
+  --accent: #b51f2a;
+  --gold: #b88926;
+  --ink: #172033;
+  --muted: #5f6b7e;
+  --line: #dbe2ea;
+  --bg: #f4f7fa;
+  --surface: #ffffff;
+  --surface-2: #f7f9fc;
+  --depth-1: 0 1px 2px rgba(16, 31, 55, 0.05), 0 10px 28px rgba(16, 31, 55, 0.07);
+}
+
+body { background: #f4f7fa; }
+
+.brand-mark {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.42);
+}
+
+.brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.topbar .brand-mark { background: transparent; box-shadow: none; }
+
+.topbar {
+  min-height: 76px;
+  border-bottom: 3px solid var(--accent);
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(16, 31, 55, 0.07);
+}
+
+.topbar .brand-copy strong { color: var(--brand); font-size: 1rem; }
+.topbar .brand-copy span { color: var(--muted); }
+.login-page { background: var(--brand); }
+
+.welcome-panel {
+  background: linear-gradient(135deg, rgba(4, 37, 77, 0.97), rgba(6, 53, 109, 0.92) 62%, rgba(126, 25, 38, 0.9)), var(--brand);
+}
+
+.welcome-panel::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, transparent 78%, rgba(184, 137, 38, 0.22));
+  content: "";
+}
+
+.welcome-panel .brand-mark { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.48); }
+.hero-kicker { border-color: rgba(184, 137, 38, 0.58); background: rgba(184, 137, 38, 0.16); }
+.layout-grid { max-width: 1680px; margin: 0 auto; }
+
+.sidebar {
+  padding: 12px;
+  border-top: 3px solid var(--brand);
+  border-radius: 12px;
+  background: #ffffff;
+  backdrop-filter: none;
+}
+
+.nav-button { border-radius: 8px; }
+.nav-button.active { border-left: 3px solid var(--accent); background: #edf4fb; box-shadow: none; }
+
+.hero-card, .panel, .request-form, .metric-card, .course-card, .case-card, .mini-card,
+.training-stats, .assignment-panel, .panel-subsection, .course-toolbar, .executive-dashboard,
+.campus-card, .case-picker, .case-detail-panel, .assignment-inline, .assignment-compact, .modal-panel {
+  border-radius: 12px;
+  background: #ffffff;
+  backdrop-filter: none;
+}
+
+.hero-card { border-top: 4px solid var(--brand); background: #ffffff; }
+.hero-copy h1 { color: var(--brand); letter-spacing: -0.035em; }
+.hero-visual { background: linear-gradient(145deg, #052b59, #06356d 56%, #8f1b2a); }
+.pulse-card { border-left: 3px solid var(--gold); background: rgba(4, 22, 49, 0.64); }
+.pulse-card .metric-value { color: #ffffff; }
+.metric-card { border-top: 3px solid #dbe7f4; }
+.metric-card:hover, .course-card:hover, .case-card:hover, .campus-card:hover { border-color: #aac2df; }
+.executive-dashboard { border-top: 4px solid var(--brand); background: #f8fafc; }
+
+.campus-dashboard-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.campus-card { min-height: 0; gap: 14px; padding: 18px; border-top: 3px solid #dbe7f4; }
+.campus-card-title strong { color: var(--brand); font-size: 1.15rem; }
+.campus-status-grid { gap: 8px; }
+.campus-status-grid span { padding-bottom: 7px; border-bottom: 1px solid #edf0f4; }
+.campus-status-grid strong { color: var(--brand); font-variant-numeric: tabular-nums; }
+.campus-card.selected { border-color: var(--brand); border-top-color: var(--accent); background: #f1f6fc; }
+.badge.blue { background: #edf4fb; color: var(--brand); }
+.button.primary { background: var(--brand); box-shadow: 0 8px 18px rgba(6, 53, 109, 0.18); }
+.button.primary:hover { background: var(--brand-2); box-shadow: 0 12px 24px rgba(6, 53, 109, 0.24); }
+
+@media (max-width: 760px) {
+  .topbar { padding: 12px 18px; }
+  .topbar .brand-row { align-items: center; }
+  .brand-mark { width: 44px; height: 44px; flex-basis: 44px; }
+  .campus-dashboard-grid { grid-template-columns: 1fr; }
+}
+
 .admin-create-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
