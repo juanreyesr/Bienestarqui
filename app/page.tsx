@@ -285,11 +285,6 @@ function LoginPage({ users, onLogin }: { users: DemoUser[]; onLogin: (user: Demo
             y convertir cada senal en acciones preventivas para estudiantes, docentes y sedes.
           </p>
         </div>
-        <div className="privacy-strip" aria-label="Principios de seguridad">
-          <div className="privacy-item"><Shield size={22} aria-hidden="true" /> Minimo necesario por rol</div>
-          <div className="privacy-item"><LockKeyhole size={22} aria-hidden="true" /> Notas clinicas restringidas</div>
-          <div className="privacy-item"><BookOpen size={22} aria-hidden="true" /> Formacion preventiva</div>
-        </div>
       </section>
 
       <section className="login-card-wrap">
