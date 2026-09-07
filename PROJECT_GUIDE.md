@@ -32,6 +32,9 @@ Principios que deben permanecer:
 | --- | --- | --- |
 | Acceso institucional | Todos | El correo identifica el perfil; no presentar datos de casos antes de iniciar. |
 | Formación | Todos | Es la puerta de entrada y no revela actividad de acompañamiento. |
+| Gestión de cursos | Coordinación del proyecto | Crea, edita u oculta videos; no elimina historial de asignaciones. |
+| Estadísticas de cursos | Coordinación del proyecto y decanato | Solo conteos agregados de visualización y aprobación. |
+| Mis certificados | Coordinadores, docentes y estudiantes | Aparecen automáticamente después de aprobar un curso elegible. |
 | Solicitud de apoyo | Estudiantes y docentes | Consentimiento visible y ruta urgente clara. |
 | Gestiones / casos | Psicología y coordinación autorizada | Aplicar el mínimo necesario por rol. |
 | Tablero ejecutivo | Decanato y coordinación | Solo datos agregados; nunca notas clínicas ni identificadores innecesarios. |
@@ -60,6 +63,13 @@ Principios que deben permanecer:
 3. Tablero con periodos, tendencias y exportación de datos agregados, sin identificación personal.
 4. Centro de recursos con contactos, horarios, preguntas frecuentes y canales de apoyo externos verificados.
 5. Prueba guiada con estudiantes, docentes, psicología y coordinación antes de una implementación general.
+
+## Operación de cursos y certificados
+
+- **Crear curso** abre una ventana flotante; el video se registra con su plataforma y URL o identificador, junto con audiencia, contenido y opción de evaluación para certificado.
+- Los cursos ocultos dejan de aparecer para las personas usuarias y no pueden asignarse, pero coordinación del proyecto y decanato los conservan visibles para gestión y seguimiento.
+- Las estadísticas de cada video cuentan personas con avance mayor de cero y personas aprobadas; no muestran nombres ni información clínica.
+- Un certificado se considera emitido automáticamente cuando el curso tiene evaluación habilitada y el registro alcanza 100 % con calificación de 70 o más, o cuando ya existe una aprobación registrada. La maqueta del certificado se abordará en una fase posterior.
 
 ## Cómo mantener este documento
 

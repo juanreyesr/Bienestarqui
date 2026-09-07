@@ -10,12 +10,14 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  EyeOff,
   FileText,
   Folder,
   LockKeyhole,
   LogOut,
   Monitor,
   Play,
+  Pencil,
   Plus,
   Printer,
   RotateCcw,
@@ -61,7 +63,8 @@ type ViewKey =
   | "solicitud"
   | "crisis"
   | "casos_curso"
-  | "casos_completados";
+  | "casos_completados"
+  | "certificados";
 type CaseActionKind = "take" | "refer" | "attend" | "noshow";
 
 const statusTone: Record<RequestStatus, "green" | "blue" | "orange" | "red"> = {
@@ -207,6 +210,9 @@ export default function Home() {
               setProgressList={setProgressList}
               setActiveView={setActiveView}
             />
+          )}
+          {activeView === "certificados" && (
+            <CertificatesPanel user={currentUser} courseList={courseList} progressList={progressList} />
           )}
           {activeView === "usuarios" && (
             <UsersPanel
@@ -1464,6 +1470,53 @@ function SupportForm({
   );
 }
 
+function CertificatesPanel({
+  user,
+  courseList,
+  progressList
+}: {
+  user: DemoUser;
+  courseList: Course[];
+  progressList: TrainingProgress[];
+}) {
+  const certificates = progressList
+    .filter((item) => item.person === user.name)
+    .flatMap((item) => {
+      const course = courseList.find((candidate) => candidate.title === item.course);
+      return course && hasEarnedCertificate(item, course) ? [{ item, course }] : [];
+    });
+
+  return (
+    <section className="panel certificates-panel">
+      <div className="panel-head">
+        <div>
+          <span className="badge blue"><FileText size={15} aria-hidden="true" /> Reconocimientos de formación</span>
+          <h2 style={{ marginTop: 10 }}>Mis certificados</h2>
+          <p className="muted">Se generan automáticamente al aprobar la evaluación de un curso elegible.</p>
+        </div>
+      </div>
+      {certificates.length ? (
+        <div className="grid-3 certificate-grid">
+          {certificates.map(({ item, course }) => (
+            <article className="certificate-card" key={item.assignmentId}>
+              <FileText size={28} aria-hidden="true" />
+              <span className="badge green">Aprobado</span>
+              <h3>{course.title}</h3>
+              <p className="muted">{course.specialty} · {course.duration}</p>
+              <p className="certificate-date">Emitido automáticamente el {item.approvedAt ?? item.assignedAt}</p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="consent-box">
+          <strong>Aún no tienes certificados</strong>
+          <p className="muted">Cuando completes y apruebes un curso con evaluación, aparecerá aquí sin necesidad de solicitarlo.</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function TrainingCenter({
   user,
   users,
@@ -1482,10 +1535,12 @@ function TrainingCenter({
   setActiveView: (view: ViewKey) => void;
 }) {
   const [showBuilder, setShowBuilder] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [showAssigner, setShowAssigner] = useState(false);
   const [courseQuery, setCourseQuery] = useState("");
   const [classificationFilter, setClassificationFilter] = useState<Course["classification"] | "Todas">("Todas");
   const canCreateCourses = user.role === "coordinador_proyecto";
+  const canViewCourseStats = user.role === "coordinador_proyecto" || user.role === "decano";
   const canAssignCourses = user.role === "decano" || user.role === "coordinador_proyecto" || user.role === "coordinador_sede";
   const visibleProgress = user.role === "coordinador_sede"
     ? progressList.filter((item) => item.campus === user.campus)
@@ -1501,6 +1556,7 @@ function TrainingCenter({
     return map;
   }, new Map());
   const filteredCourses = courseList
+    .filter((course) => !course.hidden || canViewCourseStats)
     .filter((course) => classificationFilter === "Todas" || course.classification === classificationFilter)
     .filter((course) => courseMatchesSearch(course, courseQuery))
     .sort((a, b) => {
@@ -1530,7 +1586,7 @@ function TrainingCenter({
             </button>
           ) : null}
           {canCreateCourses ? (
-            <button className="button primary" type="button" onClick={() => setShowBuilder((current) => !current)}>
+            <button className="button primary" type="button" onClick={() => setShowBuilder(true)}>
               <Plus size={18} aria-hidden="true" />
               Crear curso
             </button>
@@ -1568,6 +1624,9 @@ function TrainingCenter({
         {filteredCourses.map((course) => {
           const assignments = assignmentsByCourse.get(course.title) ?? [];
           const primaryAssignment = assignments.find((item) => !item.approvedAt) ?? assignments[0];
+          const allAssignments = progressList.filter((item) => item.course === course.title);
+          const watchedCount = allAssignments.filter((item) => item.progress > 0).length;
+          const approvedCount = allAssignments.filter((item) => hasEarnedCertificate(item, course)).length;
           return (
           <article className="course-card course-preview" key={course.id}>
             <div className="course-cover" aria-hidden="true">
@@ -1583,6 +1642,7 @@ function TrainingCenter({
               </div>
             ) : null}
             <span className="badge blue">{course.category}</span>
+            {course.hidden ? <span className="badge orange">Oculto</span> : null}
             <span className={course.classification === "Habilidades técnicas" ? "badge orange" : "badge green"}>{course.classification}</span>
             <h3>{course.title}</h3>
             <p className="muted">{course.description}</p>
@@ -1597,6 +1657,32 @@ function TrainingCenter({
             </div>
             {primaryAssignment?.approvedAt ? <p className="muted">Aprobado el {primaryAssignment.approvedAt}</p> : null}
             <p className="muted">{course.modules.join(" · ")}</p>
+            {isSafeExternalUrl(course.resourceUrl) ? (
+              <a className="button secondary" href={course.resourceUrl} target="_blank" rel="noreferrer">
+                <Play size={16} aria-hidden="true" /> Ver video
+              </a>
+            ) : null}
+            {canViewCourseStats ? (
+              <div className="course-insights" aria-label={`Estadísticas de ${course.title}`}>
+                <span><Eye size={16} aria-hidden="true" /> {watchedCount} vieron</span>
+                <span><CheckCircle2 size={16} aria-hidden="true" /> {approvedCount} aprobaron</span>
+              </div>
+            ) : null}
+            {canCreateCourses ? (
+              <div className="course-actions">
+                <button className="button secondary" type="button" onClick={() => setEditingCourse(course)}>
+                  <Pencil size={16} aria-hidden="true" /> Editar
+                </button>
+                <button
+                  className="button ghost"
+                  type="button"
+                  onClick={() => setCourseList((current) => current.map((item) => item.id === course.id ? { ...item, hidden: !item.hidden } : item))}
+                >
+                  {course.hidden ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />}
+                  {course.hidden ? "Mostrar" : "Ocultar"}
+                </button>
+              </div>
+            ) : null}
           </article>
         );})}
       </div>
@@ -1609,10 +1695,27 @@ function TrainingCenter({
 
       {isStudentView ? <TrainingUsageStats /> : null}
 
-      {showBuilder ? <CourseBuilder onCancel={() => setShowBuilder(false)} onSave={(course) => {
-        setCourseList((current) => [course, ...current]);
-        setShowBuilder(false);
-      }} /> : null}
+      {showBuilder ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="course-builder-title">
+          <CourseBuilder onCancel={() => setShowBuilder(false)} onSave={(course) => {
+            setCourseList((current) => [course, ...current]);
+            setShowBuilder(false);
+          }} />
+        </div>
+      ) : null}
+
+      {editingCourse ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="course-builder-title">
+          <CourseBuilder
+            course={editingCourse}
+            onCancel={() => setEditingCourse(null)}
+            onSave={(course) => {
+              setCourseList((current) => current.map((item) => item.id === course.id ? course : item));
+              setEditingCourse(null);
+            }}
+          />
+        </div>
+      ) : null}
 
       {showAssigner ? (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="assign-title">
@@ -1709,50 +1812,58 @@ function TrainingUsageStats({ compact = false }: { compact?: boolean }) {
 }
 
 function CourseBuilder({
+  course,
   onCancel,
   onSave
 }: {
+  course?: Course;
   onCancel: () => void;
   onSave: (course: Course) => void;
 }) {
-  const [title, setTitle] = useState("");
-  const [hours, setHours] = useState("2");
-  const [category, setCategory] = useState("Bienestar preventivo");
-  const [classification, setClassification] = useState<Course["classification"]>("Habilidades blandas");
-  const [specialty, setSpecialty] = useState("Bienestar y convivencia");
-  const [coverUrl, setCoverUrl] = useState("");
-  const [platform, setPlatform] = useState<Course["platform"]>("YouTube");
-  const [resourceUrl, setResourceUrl] = useState("");
-  const [description, setDescription] = useState("");
-  const [publishDate, setPublishDate] = useState("2026-07-06");
-  const [certificateEvaluation, setCertificateEvaluation] = useState(true);
+  const [title, setTitle] = useState(course?.title ?? "");
+  const [audience, setAudience] = useState(course?.audience ?? "Estudiantes y docentes");
+  const [hours, setHours] = useState(course?.duration.match(/\d+/)?.[0] ?? "2");
+  const [category, setCategory] = useState(course?.category ?? "Bienestar preventivo");
+  const [classification, setClassification] = useState<Course["classification"]>(course?.classification ?? "Habilidades blandas");
+  const [specialty, setSpecialty] = useState(course?.specialty ?? "Bienestar y convivencia");
+  const [coverUrl, setCoverUrl] = useState(course?.coverUrl ?? "");
+  const [platform, setPlatform] = useState<Course["platform"]>(course?.platform ?? "YouTube");
+  const [resourceUrl, setResourceUrl] = useState(course?.resourceUrl ?? "");
+  const [description, setDescription] = useState(course?.description ?? "");
+  const [publishDate, setPublishDate] = useState(course?.publishDate ?? "2026-07-06");
+  const [certificateEvaluation, setCertificateEvaluation] = useState(course?.certificateEvaluation ?? true);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim() || !description.trim()) return;
     onSave({
-      id: `c-${Date.now()}`,
+      id: course?.id ?? `c-${Date.now()}`,
       title: title.trim(),
-      audience: "Estudiantes y docentes",
+      audience,
       classification,
       category,
       specialty,
       duration: `${hours} horas`,
-      modules: [resourceUrl ? "Video principal" : "Contenido inicial", "Material de apoyo", certificateEvaluation ? "Evaluacion para certificado" : "Cierre"],
-      completion: 0,
-      assignedBy: "M.A. Juan J. Reyes",
+      modules: course?.modules ?? [resourceUrl ? "Video principal" : "Contenido inicial", "Material de apoyo", certificateEvaluation ? "Evaluacion para certificado" : "Cierre"],
+      completion: course?.completion ?? 0,
+      assignedBy: course?.assignedBy ?? "M.A. Juan J. Reyes",
       description: description.trim(),
       platform,
       coverUrl,
+      resourceUrl,
       publishDate,
-      certificateEvaluation
+      certificateEvaluation,
+      hidden: course?.hidden
     });
   }
 
   return (
-    <form className="course-builder" onSubmit={submit}>
+    <form className="course-builder modal-panel wide" onSubmit={submit}>
       <div className="builder-head">
-        <h2>Nuevo recurso formativo</h2>
+        <div>
+          <h2 id="course-builder-title">{course ? "Editar recurso formativo" : "Nuevo recurso formativo"}</h2>
+          <p>{course ? "Actualiza el video, el contenido y la disponibilidad del curso." : "Carga el video y configura cómo se ofrecerá el nuevo curso."}</p>
+        </div>
         <div className="case-actions">
           <button className="button dark-secondary" type="button" onClick={onCancel}>
             <X size={18} aria-hidden="true" />
@@ -1760,7 +1871,7 @@ function CourseBuilder({
           </button>
           <button className="button save" type="submit">
             <Save size={18} aria-hidden="true" />
-            Guardar cambios
+            {course ? "Guardar cambios" : "Crear curso"}
           </button>
         </div>
       </div>
@@ -1773,6 +1884,10 @@ function CourseBuilder({
           <div className="field dark">
             <label htmlFor="course-category">Categoria</label>
             <input id="course-category" value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Selecciona o escribe una categoria nueva" />
+          </div>
+          <div className="field dark">
+            <label htmlFor="course-audience">Dirigido a</label>
+            <input id="course-audience" value={audience} onChange={(event) => setAudience(event.target.value)} placeholder="Ej. Estudiantes, docentes o coordinadores" />
           </div>
           <div className="field dark">
             <label htmlFor="course-classification">Clasificacion</label>
@@ -1862,7 +1977,8 @@ function CourseAssignmentPanel({
     { value: "Docente", label: "Docentes" },
     { value: "Estudiante", label: "Estudiantes" }
   ].filter((option) => user.role !== "coordinador_sede" || option.value === "Estudiante");
-  const [courseTitle, setCourseTitle] = useState(courseList[0]?.title ?? "");
+  const availableCourses = courseList.filter((course) => !course.hidden);
+  const [courseTitle, setCourseTitle] = useState(availableCourses[0]?.title ?? "");
   const [blockKind, setBlockKind] = useState(blockOptions[0]?.value ?? "Estudiante");
   const [personQuery, setPersonQuery] = useState("");
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
@@ -1915,7 +2031,7 @@ function CourseAssignmentPanel({
         <div className="field">
           <label htmlFor="assign-course">Curso</label>
           <select id="assign-course" value={courseTitle} onChange={(event) => setCourseTitle(event.target.value)}>
-            {courseList.map((course) => <option key={course.id}>{course.title}</option>)}
+            {availableCourses.map((course) => <option key={course.id}>{course.title}</option>)}
           </select>
         </div>
         {mode === "bloque" ? (
@@ -2418,6 +2534,20 @@ function courseMatchesSearch(course: Course, term: string) {
     course.platform,
     ...course.modules
   ].some((value) => value.toLowerCase().includes(query));
+}
+
+function hasEarnedCertificate(progress: TrainingProgress, course: Course) {
+  return Boolean(progress.approvedAt) || (course.certificateEvaluation && progress.progress === 100 && (progress.grade ?? 0) >= 70);
+}
+
+function isSafeExternalUrl(value?: string) {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
 }
 
 function navigationCounts(user: DemoUser, requests: SupportRequest[]) {

@@ -1315,6 +1315,94 @@ th {
   }
 }
 
+/* Training management: clear actions and compact course outcomes. */
+.course-actions,
+.course-insights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.course-actions {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.course-actions .button {
+  flex: 1 1 120px;
+}
+
+.course-insights {
+  margin-top: 4px;
+}
+
+.course-insights span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--brand);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.course-builder.modal-panel {
+  width: min(100%, 1040px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  border-color: #1e293b;
+  background: #111111;
+}
+
+.builder-head p {
+  max-width: 580px;
+  margin: 8px 0 0;
+  color: #b7c0ce;
+}
+
+.certificates-panel {
+  display: grid;
+  gap: 20px;
+}
+
+.certificate-grid {
+  align-items: stretch;
+}
+
+.certificate-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 220px;
+  border: 1px solid #d8e4f1;
+  border-top: 4px solid var(--gold);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #f6f9fd);
+  padding: 20px;
+  box-shadow: var(--depth-1);
+}
+
+.certificate-card > svg {
+  color: var(--brand);
+}
+
+.certificate-card h3 {
+  margin: 0;
+  color: var(--brand);
+}
+
+.certificate-card p { margin: 0; }
+.certificate-date { color: var(--muted); font-size: 0.88rem; }
+
+@media (max-width: 760px) {
+  .course-builder.modal-panel {
+    max-height: calc(100dvh - 24px);
+    padding: 18px;
+  }
+
+  .course-actions .button { width: 100%; }
+}
+
 @media print {
   .topbar,
   .sidebar,

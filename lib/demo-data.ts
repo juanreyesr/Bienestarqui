@@ -3,6 +3,7 @@ import {
   BarChart3,
   BookOpen,
   ClipboardList,
+  FileText,
   GraduationCap,
   HeartHandshake,
   LifeBuoy,
@@ -96,8 +97,10 @@ export type Course = {
   description: string;
   platform: "YouTube" | "Vimeo" | "Teams";
   coverUrl?: string;
+  resourceUrl?: string;
   publishDate?: string;
   certificateEvaluation: boolean;
+  hidden?: boolean;
 };
 
 export type TrainingProgress = {
@@ -571,6 +574,7 @@ export const roleLabels: Record<Role, string> = {
 export const roleNavigation: Record<Role, NavItem[]> = {
   coordinador_proyecto: [
     { key: "formacion", label: "Centro de Formacion", Icon: BookOpen },
+    { key: "certificados", label: "Mis certificados", Icon: FileText },
     { key: "gestiones", label: "Bienestar estudiantil", Icon: HeartHandshake },
     { key: "resumen", label: "Estadisticas", Icon: BarChart3 },
     { key: "usuarios", label: "Usuarios y sedes", Icon: Users },
@@ -592,12 +596,14 @@ export const roleNavigation: Record<Role, NavItem[]> = {
   ],
   coordinador_sede: [
     { key: "formacion", label: "Centro de Formacion", Icon: GraduationCap },
+    { key: "certificados", label: "Mis certificados", Icon: FileText },
     { key: "solicitud", label: "Bienestar estudiantil", Icon: HeartHandshake },
     { key: "resumen", label: "Mi sede", Icon: BarChart3 },
     { key: "privacidad", label: "Alcance de datos", Icon: Shield }
   ],
   estudiante_docente: [
     { key: "formacion", label: "Centro de Formacion UMG", Icon: BookOpen },
+    { key: "certificados", label: "Mis certificados", Icon: FileText },
     { key: "solicitud", label: "Bienestar estudiantil", Icon: HeartHandshake },
     { key: "privacidad", label: "Privacidad", Icon: Shield }
   ]
