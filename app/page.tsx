@@ -1537,6 +1537,7 @@ function TrainingCenter({
 }) {
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [coursePendingDeletion, setCoursePendingDeletion] = useState<Course | null>(null);
   const [showAssigner, setShowAssigner] = useState(false);
   const [courseQuery, setCourseQuery] = useState("");
   const [classificationFilter, setClassificationFilter] = useState<Course["classification"] | "Todas">("Todas");
@@ -1682,6 +1683,9 @@ function TrainingCenter({
                   {course.hidden ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />}
                   {course.hidden ? "Mostrar" : "Ocultar"}
                 </button>
+                <button className="button danger" type="button" onClick={() => setCoursePendingDeletion(course)}>
+                  <Trash2 size={16} aria-hidden="true" /> Borrar
+                </button>
               </div>
             ) : null}
           </article>
@@ -1715,6 +1719,30 @@ function TrainingCenter({
               setEditingCourse(null);
             }}
           />
+        </div>
+      ) : null}
+
+      {coursePendingDeletion ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-course-title">
+          <section className="modal-panel deletion-panel">
+            <div className="panel-head">
+              <div>
+                <span className="badge red"><AlertTriangle size={15} aria-hidden="true" /> Acción irreversible</span>
+                <h2 id="delete-course-title" style={{ marginTop: 10 }}>¿Borrar este curso?</h2>
+              </div>
+              <button className="button secondary" type="button" onClick={() => setCoursePendingDeletion(null)}><X size={18} aria-hidden="true" /> Cerrar</button>
+            </div>
+            <p>Vas a borrar <strong>{coursePendingDeletion.title}</strong>. También se eliminarán sus asignaciones y avances asociados. Esta acción no se puede deshacer.</p>
+            <div className="case-actions">
+              <button className="button secondary" type="button" onClick={() => setCoursePendingDeletion(null)}>Cancelar</button>
+              <button className="button danger" type="button" onClick={() => {
+                const title = coursePendingDeletion.title;
+                setCourseList((current) => current.filter((course) => course.id !== coursePendingDeletion.id));
+                setProgressList((current) => current.filter((item) => item.course !== title));
+                setCoursePendingDeletion(null);
+              }}><Trash2 size={18} aria-hidden="true" /> Sí, borrar curso</button>
+            </div>
+          </section>
         </div>
       ) : null}
 
