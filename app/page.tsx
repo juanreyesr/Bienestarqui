@@ -53,6 +53,7 @@ import {
   type TrainingProgress
 } from "@/lib/demo-data";
 import { WellbeingScene } from "./WellbeingScene";
+import { emptyQuestions, importEvaluationQuestions, validateEvaluationQuestions, type EvaluationQuestion } from "@/lib/evaluation";
 
 type ViewKey =
   | "resumen"
@@ -1570,9 +1571,9 @@ function TrainingCenter({
     <section className="panel training-home">
       <div className="panel-head">
         <div>
-          <span className="badge blue"><BookOpen size={15} aria-hidden="true" /> Primero: formacion preventiva</span>
-          <h2 style={{ marginTop: 10 }}>Centro de Formacion UMG</h2>
-          <p className="muted">Cursos disponibles para bienestar, convivencia, manejo de conflictos y acompanamiento humano.</p>
+          <span className="badge blue"><BookOpen size={15} aria-hidden="true" /> Primero: formación preventiva</span>
+          <h2 style={{ marginTop: 10 }}>Centro de Formación UMG</h2>
+          <p className="muted">Cursos disponibles para bienestar, convivencia, manejo de conflictos y acompañamiento humano.</p>
         </div>
         <div className="case-actions">
           <button className="button secondary" type="button" onClick={() => setActiveView(wellbeingView)}>
@@ -1606,7 +1607,7 @@ function TrainingCenter({
             placeholder="Ej. conflictos, presupuestos, representacion, bienestar"
           />
         </div>
-        <div className="classification-tabs" aria-label="Clasificacion de videos educativos">
+        <div className="classification-tabs" aria-label="Clasificación de videos educativos">
           {classifications.map((classification) => (
             <button
               className={classificationFilter === classification ? "active" : ""}
@@ -1689,7 +1690,7 @@ function TrainingCenter({
       {filteredCourses.length === 0 ? (
         <div className="consent-box">
           <strong>No hay videos con ese filtro</strong>
-          <p className="muted">Prueba buscando por otra especialidad o cambia la clasificacion.</p>
+          <p className="muted">Prueba buscando por otra especialidad o cambia la clasificación.</p>
         </div>
       ) : null}
 
@@ -1732,8 +1733,8 @@ function TrainingCenter({
       <div className="panel-subsection">
         <div className="panel-head">
           <div>
-            <h2>Avance asignado</h2>
-            <p className="muted">Seguimiento de rutas formativas sin mezclar datos clinicos ni solicitudes de apoyo.</p>
+          <h2>Avance asignado</h2>
+          <p className="muted">Seguimiento de rutas formativas sin mezclar datos clínicos ni solicitudes de apoyo.</p>
           </div>
         </div>
         <div className="table-wrap">
@@ -1831,10 +1832,15 @@ function CourseBuilder({
   const [resourceUrl, setResourceUrl] = useState(course?.resourceUrl ?? "");
   const [description, setDescription] = useState(course?.description ?? "");
   const [publishDate, setPublishDate] = useState(course?.publishDate ?? "2026-07-06");
-  const [certificateEvaluation, setCertificateEvaluation] = useState(course?.certificateEvaluation ?? true);
+  const [certificateEvaluation, setCertificateEvaluation] = useState(course?.certificateEvaluation ?? false);
+  const [questions, setQuestions] = useState<EvaluationQuestion[]>(course?.questions ?? emptyQuestions());
+  const [questionImport, setQuestionImport] = useState("");
+  const [evaluationMessage, setEvaluationMessage] = useState("");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const questionError = certificateEvaluation ? validateEvaluationQuestions(questions) : undefined;
+    if (questionError) { setEvaluationMessage(questionError); return; }
     if (!title.trim() || !description.trim()) return;
     onSave({
       id: course?.id ?? `c-${Date.now()}`,
@@ -1844,7 +1850,7 @@ function CourseBuilder({
       category,
       specialty,
       duration: `${hours} horas`,
-      modules: course?.modules ?? [resourceUrl ? "Video principal" : "Contenido inicial", "Material de apoyo", certificateEvaluation ? "Evaluacion para certificado" : "Cierre"],
+      modules: course?.modules ?? [resourceUrl ? "Video principal" : "Contenido inicial", "Material de apoyo", certificateEvaluation ? "Evaluación para certificado" : "Cierre"],
       completion: course?.completion ?? 0,
       assignedBy: course?.assignedBy ?? "M.A. Juan J. Reyes",
       description: description.trim(),
@@ -1853,6 +1859,7 @@ function CourseBuilder({
       resourceUrl,
       publishDate,
       certificateEvaluation,
+      questions: certificateEvaluation ? questions.map((item) => ({ ...item, correctAnswer: item.correctAnswer as number })) : [],
       hidden: course?.hidden
     });
   }
@@ -1878,11 +1885,11 @@ function CourseBuilder({
       <div className="builder-grid">
         <div>
           <div className="field dark">
-            <label htmlFor="course-title">Titulo</label>
+            <label htmlFor="course-title">Nombre del curso</label>
             <input id="course-title" value={title} onChange={(event) => setTitle(event.target.value)} required />
           </div>
           <div className="field dark">
-            <label htmlFor="course-category">Categoria</label>
+            <label htmlFor="course-category">Categoría</label>
             <input id="course-category" value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Selecciona o escribe una categoria nueva" />
           </div>
           <div className="field dark">
@@ -1890,7 +1897,7 @@ function CourseBuilder({
             <input id="course-audience" value={audience} onChange={(event) => setAudience(event.target.value)} placeholder="Ej. Estudiantes, docentes o coordinadores" />
           </div>
           <div className="field dark">
-            <label htmlFor="course-classification">Clasificacion</label>
+            <label htmlFor="course-classification">Clasificación</label>
             <select id="course-classification" value={classification} onChange={(event) => setClassification(event.target.value as Course["classification"])}>
               <option>Habilidades blandas</option>
               <option>Habilidades técnicas</option>
@@ -1920,7 +1927,7 @@ function CourseBuilder({
         </div>
         <div>
           <div className="field dark">
-            <label htmlFor="hours">Duracion (Horas)</label>
+            <label htmlFor="hours">Duración (horas)</label>
             <input id="hours" type="number" min="1" value={hours} onChange={(event) => setHours(event.target.value)} />
           </div>
           <div className="field dark">
@@ -1933,20 +1940,29 @@ function CourseBuilder({
             <span>Si no se carga, se usara la portada de la plataforma.</span>
           </div>
           <div className="field dark">
-            <label htmlFor="description">Descripcion</label>
+            <label htmlFor="description">Descripción</label>
             <textarea id="description" value={description} onChange={(event) => setDescription(event.target.value)} required />
           </div>
           <div className="field dark">
-            <label htmlFor="publish">Programar publicacion</label>
+            <label htmlFor="publish">Programar publicación</label>
             <input id="publish" type="date" value={publishDate} onChange={(event) => setPublishDate(event.target.value)} />
-            <span>Deja vacio para publicar de inmediato.</span>
+            <span>Déjalo vacío para publicar de inmediato.</span>
           </div>
         </div>
       </div>
       <label className="certificate-box">
         <input type="checkbox" checked={certificateEvaluation} onChange={(event) => setCertificateEvaluation(event.target.checked)} />
-        Activar evaluacion para certificado
+        Activar evaluación para certificado
       </label>
+      {certificateEvaluation ? (
+        <section className="evaluation-builder" aria-labelledby="evaluation-title">
+          <div className="panel-head"><div><h3 id="evaluation-title">Evaluación: {title || "Nombre del curso"}</h3><p>Importa exactamente 10 preguntas o revísalas manualmente antes de guardar.</p></div></div>
+          <div className="field dark"><label htmlFor="question-import">Importar las 10 preguntas de una vez</label><textarea id="question-import" value={questionImport} onChange={(event) => setQuestionImport(event.target.value)} placeholder="1. Enunciado A) Opción uno. B) Opción dos. C) Opción tres. Respuesta correcta: B" /></div>
+          <div className="case-actions"><button className="button secondary" type="button" onClick={() => { const result = importEvaluationQuestions(questionImport); if (result.error) setEvaluationMessage(result.error); else { setQuestions(result.questions ?? emptyQuestions()); setEvaluationMessage("Las 10 preguntas se importaron correctamente. Revisa y guarda los cambios."); } }}>Importar preguntas</button><button className="button ghost" type="button" onClick={() => { setQuestions(emptyQuestions()); setEvaluationMessage(""); }}>Vaciar preguntas</button></div>
+          {evaluationMessage ? <p className="evaluation-message" role={evaluationMessage.startsWith("Las 10") ? "status" : "alert"}>{evaluationMessage}</p> : null}
+          <div className="question-editor-list">{questions.map((item, index) => <fieldset className="question-editor" key={index}><legend>Pregunta {index + 1}</legend><input value={item.question} onChange={(event) => setQuestions((current) => current.map((question, position) => position === index ? { ...question, question: event.target.value } : question))} placeholder="Enunciado" />{item.options.map((option, optionIndex) => <input key={optionIndex} value={option} onChange={(event) => setQuestions((current) => current.map((question, position) => position === index ? { ...question, options: question.options.map((value, optionPosition) => optionPosition === optionIndex ? event.target.value : value) } : question))} placeholder={`Opción ${String.fromCharCode(65 + optionIndex)}`} />)}<select value={item.correctAnswer ?? ""} onChange={(event) => setQuestions((current) => current.map((question, position) => position === index ? { ...question, correctAnswer: event.target.value === "" ? null : Number(event.target.value) } : question))}><option value="">Respuesta correcta</option>{item.options.map((_, optionIndex) => <option key={optionIndex} value={optionIndex}>Opción {String.fromCharCode(65 + optionIndex)}</option>)}</select></fieldset>)}</div>
+        </section>
+      ) : null}
     </form>
   );
 }
@@ -2015,7 +2031,7 @@ function CourseAssignmentPanel({
     <form className="assignment-panel modal-panel wide" onSubmit={submit}>
       <div className="panel-head">
         <div>
-          <h2 id="assign-title">Asignar cursos de formacion</h2>
+          <h2 id="assign-title">Asignar cursos de formación</h2>
           <p className="muted">Primero por bloques; tambien puedes marcar varias personas por nombre, correo o carné.</p>
         </div>
         <button className="button secondary" type="button" onClick={onClose}>
@@ -2023,7 +2039,7 @@ function CourseAssignmentPanel({
           Cerrar
         </button>
       </div>
-      <div className="segmented-control" aria-label="Tipo de asignacion">
+      <div className="segmented-control" aria-label="Tipo de asignación">
         <button className={mode === "bloque" ? "active" : ""} type="button" onClick={() => setMode("bloque")}>Por bloques</button>
         <button className={mode === "individual" ? "active" : ""} type="button" onClick={() => setMode("individual")}>Individual</button>
       </div>
@@ -2064,7 +2080,7 @@ function CourseAssignmentPanel({
         </div>
       </div>
       <div className="consent-box">
-        <strong>{mode === "bloque" ? "Asignacion por bloque" : "Asignacion individual"}</strong>
+        <strong>{mode === "bloque" ? "Asignación por bloque" : "Asignación individual"}</strong>
         <p className="muted">
           {mode === "bloque"
             ? `Se asignara a ${people.filter((person) => person.kind === blockKind).length} persona(s) del bloque seleccionado.`

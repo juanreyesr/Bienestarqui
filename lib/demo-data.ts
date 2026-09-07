@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { EvaluationQuestion } from "./evaluation";
 import {
   BarChart3,
   BookOpen,
@@ -100,6 +101,7 @@ export type Course = {
   resourceUrl?: string;
   publishDate?: string;
   certificateEvaluation: boolean;
+  questions?: EvaluationQuestion[];
   hidden?: boolean;
 };
 
@@ -133,7 +135,7 @@ export type NavItem = {
 export const adminPermissionLabels: Record<AdminPermission, string> = {
   manage_users: "Usuarios",
   manage_cases: "Expedientes",
-  manage_courses: "Formacion",
+  manage_courses: "Formación",
   view_reports: "Reportes",
   delete_records: "Borrado"
 };
@@ -365,13 +367,13 @@ export const initialRequests: SupportRequest[] = [
 export const courses: Course[] = [
   {
     id: "c-1",
-    title: "Autogestion emocional para entregas de taller",
+    title: "Autogestión emocional para entregas de taller",
     audience: "Estudiantes",
     classification: "Bienestar integral",
     category: "Bienestar preventivo",
-    specialty: "Manejo de estrés academico",
+    specialty: "Manejo de estrés académico",
     duration: "4 modulos",
-    modules: ["Mapa de estres", "Rutinas sostenibles", "Respiracion y pausas", "Plan de entrega"],
+    modules: ["Mapa de estrés", "Rutinas sostenibles", "Respiración y pausas", "Plan de entrega"],
     completion: 68,
     assignedBy: "Coordinacion del Proyecto",
     description: "Herramientas practicas para manejar presion, entregas y descanso en ciclos de taller.",
@@ -397,11 +399,11 @@ export const courses: Course[] = [
   },
   {
     id: "c-3",
-    title: "Mediacion y convivencia en sedes",
+    title: "Mediación y convivencia en sedes",
     audience: "Coordinadores",
     classification: "Habilidades blandas",
-    category: "Gestion preventiva",
-    specialty: "Mediacion y convivencia",
+    category: "Gestión preventiva",
+    specialty: "Mediación y convivencia",
     duration: "3 modulos",
     modules: ["Escucha activa", "Acuerdos reparadores", "Seguimiento"],
     completion: 86,
@@ -417,7 +419,7 @@ export const courses: Course[] = [
     audience: "Estudiantes y docentes",
     classification: "Habilidades blandas",
     category: "Convivencia",
-    specialty: "Resolucion de conflictos",
+    specialty: "Resolución de conflictos",
     duration: "3 modulos",
     modules: ["Tipos de conflicto", "Conversaciones de reparacion", "Acuerdos de equipo"],
     completion: 34,
@@ -432,7 +434,7 @@ export const courses: Course[] = [
     title: "Habitos sostenibles para semanas de entrega",
     audience: "Estudiantes",
     classification: "Bienestar integral",
-    category: "Organizacion personal",
+    category: "Organización personal",
     specialty: "Organizacion del tiempo",
     duration: "4 modulos",
     modules: ["Planificacion inversa", "Sueno y energia", "Bloques de avance", "Cierre saludable"],
@@ -510,7 +512,7 @@ export const trainingProgress: TrainingProgress[] = [
     person: "Paola Alvarez",
     campus: "Quetzaltenango",
     role: "Coordinador",
-    course: "Mediacion y convivencia en sedes",
+    course: "Mediación y convivencia en sedes",
     progress: 72,
     due: "2026-07-18",
     assignedBy: "M.A. Juan J. Reyes",
@@ -521,7 +523,7 @@ export const trainingProgress: TrainingProgress[] = [
     person: "Maria Jose Alvarez",
     campus: "Central",
     role: "Estudiante",
-    course: "Autogestion emocional para entregas de taller",
+    course: "Autogestión emocional para entregas de taller",
     progress: 68,
     due: "2026-07-15",
     assignedBy: "M.A. Juan J. Reyes",
@@ -545,7 +547,7 @@ export const trainingProgress: TrainingProgress[] = [
     person: "Sofia Marroquin",
     campus: "San Marcos",
     role: "Estudiante",
-    course: "Autogestion emocional para entregas de taller",
+    course: "Autogestión emocional para entregas de taller",
     progress: 20,
     due: "2026-07-30",
     assignedBy: "M.A. Juan J. Reyes",
@@ -573,36 +575,36 @@ export const roleLabels: Record<Role, string> = {
 
 export const roleNavigation: Record<Role, NavItem[]> = {
   coordinador_proyecto: [
-    { key: "formacion", label: "Centro de Formacion", Icon: BookOpen },
+    { key: "formacion", label: "Centro de Formación", Icon: BookOpen },
     { key: "certificados", label: "Mis certificados", Icon: FileText },
     { key: "gestiones", label: "Bienestar estudiantil", Icon: HeartHandshake },
-    { key: "resumen", label: "Estadisticas", Icon: BarChart3 },
+    { key: "resumen", label: "Estadísticas", Icon: BarChart3 },
     { key: "usuarios", label: "Usuarios y sedes", Icon: Users },
     { key: "privacidad", label: "Privacidad", Icon: Shield }
   ],
   decano: [
-    { key: "formacion", label: "Centro de Formacion", Icon: GraduationCap },
+    { key: "formacion", label: "Centro de Formación", Icon: GraduationCap },
     { key: "gestiones", label: "Bienestar estudiantil", Icon: HeartHandshake },
     { key: "resumen", label: "Tablero ejecutivo", Icon: BarChart3 },
     { key: "privacidad", label: "Limites eticos", Icon: Shield }
   ],
   psicologo: [
-    { key: "formacion", label: "Centro de Formacion", Icon: BookOpen },
+    { key: "formacion", label: "Centro de Formación", Icon: BookOpen },
     { key: "gestiones", label: "Bienestar estudiantil", Icon: Stethoscope },
     { key: "casos_curso", label: "Casos en curso", Icon: ClipboardList },
     { key: "casos_completados", label: "Casos completados", Icon: UserCheck },
-    { key: "crisis", label: "Riesgo y derivacion", Icon: LifeBuoy },
+    { key: "crisis", label: "Riesgo y derivación", Icon: LifeBuoy },
     { key: "privacidad", label: "Confidencialidad", Icon: Shield }
   ],
   coordinador_sede: [
-    { key: "formacion", label: "Centro de Formacion", Icon: GraduationCap },
+    { key: "formacion", label: "Centro de Formación", Icon: GraduationCap },
     { key: "certificados", label: "Mis certificados", Icon: FileText },
     { key: "solicitud", label: "Bienestar estudiantil", Icon: HeartHandshake },
     { key: "resumen", label: "Mi sede", Icon: BarChart3 },
     { key: "privacidad", label: "Alcance de datos", Icon: Shield }
   ],
   estudiante_docente: [
-    { key: "formacion", label: "Centro de Formacion UMG", Icon: BookOpen },
+    { key: "formacion", label: "Centro de Formación UMG", Icon: BookOpen },
     { key: "certificados", label: "Mis certificados", Icon: FileText },
     { key: "solicitud", label: "Bienestar estudiantil", Icon: HeartHandshake },
     { key: "privacidad", label: "Privacidad", Icon: Shield }

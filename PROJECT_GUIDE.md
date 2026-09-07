@@ -67,6 +67,7 @@ Principios que deben permanecer:
 ## Operación de cursos y certificados
 
 - **Crear curso** abre una ventana flotante; el video se registra con su plataforma y URL o identificador, junto con audiencia, contenido y opción de evaluación para certificado.
+- Al activar una evaluación, la primera referencia visible es el nombre del curso. La persona administradora puede importar exactamente diez preguntas o completarlas una por una antes de guardar.
 - Los cursos ocultos dejan de aparecer para las personas usuarias y no pueden asignarse, pero coordinación del proyecto y decanato los conservan visibles para gestión y seguimiento.
 - Las estadísticas de cada video cuentan personas con avance mayor de cero y personas aprobadas; no muestran nombres ni información clínica.
 - Un certificado se considera emitido automáticamente cuando el curso tiene evaluación habilitada y el registro alcanza 100 % con calificación de 70 o más, o cuando ya existe una aprobación registrada. La maqueta del certificado se abordará en una fase posterior.

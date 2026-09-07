@@ -1394,6 +1394,16 @@ th {
 .certificate-card p { margin: 0; }
 .certificate-date { color: var(--muted); font-size: 0.88rem; }
 
+.evaluation-builder { display: grid; gap: 16px; border-top: 1px solid #344154; padding-top: 20px; }
+.evaluation-builder h3 { margin: 0; color: #ffffff; }
+.evaluation-builder .panel-head p { margin: 6px 0 0; color: #b7c0ce; }
+.evaluation-message { margin: 0; border-radius: 8px; background: #edf4fb; color: #06356d; padding: 12px; font-weight: 700; }
+.question-editor-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.question-editor { display: grid; gap: 8px; margin: 0; border: 1px solid #344154; border-radius: 8px; padding: 12px; }
+.question-editor legend { padding: 0 6px; color: #d7dde7; font-weight: 800; }
+.question-editor input, .question-editor select { min-height: 42px; border: 1px solid #344154; border-radius: 6px; background: #111827; color: #f8fafc; padding: 8px 10px; }
+@media (max-width: 760px) { .question-editor-list { grid-template-columns: 1fr; } }
+
 @media (max-width: 760px) {
   .course-builder.modal-panel {
     max-height: calc(100dvh - 24px);
